@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -32,7 +33,7 @@ func run() error {
 		return err
 	}
 	if opts.ShowVersion {
-		fmt.Printf("lazyvercel %s\n", version)
+		fmt.Printf("lazyvercel %s\n", displayVersion())
 		return nil
 	}
 
@@ -48,6 +49,17 @@ func run() error {
 	program := tea.NewProgram(ui.NewModel(store), tea.WithAltScreen())
 	_, err = program.Run()
 	return err
+}
+
+func displayVersion() string {
+	if version != "" && version != "dev" {
+		return version
+	}
+	info, ok := debug.ReadBuildInfo()
+	if ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return version
 }
 
 func printSummary(store *vercel.Store) {
