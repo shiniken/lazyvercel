@@ -52,8 +52,16 @@ func run() error {
 
 func printSummary(store *vercel.Store) {
 	for _, project := range store.Projects() {
-		fmt.Printf("%s  %s\n", project.ProjectName, project.Dir)
-		for _, deployment := range store.Deployments(project) {
+		deployments := store.Deployments(project)
+		if len(deployments) == 0 {
+			continue
+		}
+		context := firstNonEmpty(project.AccountSlug, project.AccountName, project.AccountID)
+		if project.LinkedDir != "" {
+			context = project.LinkedDir
+		}
+		fmt.Printf("%s  %s\n", project.Name, context)
+		for _, deployment := range deployments {
 			title := firstNonEmpty(
 				fmt.Sprint(deployment.Meta["githubCommitMessage"]),
 				deployment.URL,

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 type Options struct {
@@ -13,6 +14,7 @@ type Options struct {
 	Limit       int
 	Target      string
 	Branch      string
+	Refresh     time.Duration
 	Plain       bool
 	ShowVersion bool
 }
@@ -20,8 +22,9 @@ type Options struct {
 func ParseOptions(args []string) (Options, error) {
 	var dirs multiFlag
 	opts := Options{
-		Limit:  20,
-		Target: "",
+		Limit:   20,
+		Target:  "",
+		Refresh: 30 * time.Second,
 	}
 
 	fs := flag.NewFlagSet("lazyvercel", flag.ContinueOnError)
@@ -31,6 +34,7 @@ func ParseOptions(args []string) (Options, error) {
 	fs.IntVar(&opts.Limit, "limit", opts.Limit, "deployments to fetch per project")
 	fs.StringVar(&opts.Target, "target", opts.Target, "filter deployments by target, such as production or preview")
 	fs.StringVar(&opts.Branch, "branch", opts.Branch, "filter deployments by git branch")
+	fs.DurationVar(&opts.Refresh, "refresh", opts.Refresh, "auto-refresh interval; set 0 to disable")
 	fs.BoolVar(&opts.Plain, "plain", false, "print deployments once and exit")
 	fs.BoolVar(&opts.ShowVersion, "version", false, "print version and exit")
 
@@ -48,15 +52,15 @@ func ParseOptions(args []string) (Options, error) {
 	}
 
 	opts.Dirs = dirs
-	if len(opts.Dirs) == 0 {
-		opts.Dirs = []string{"."}
-	}
 
 	if opts.Limit < 1 {
 		return Options{}, fmt.Errorf("--limit must be greater than zero")
 	}
 	if opts.Limit > 100 {
 		opts.Limit = 100
+	}
+	if opts.Refresh < 0 {
+		return Options{}, fmt.Errorf("--refresh cannot be negative")
 	}
 	opts.Target = strings.TrimSpace(opts.Target)
 	opts.Branch = strings.TrimSpace(opts.Branch)

@@ -10,6 +10,35 @@ type listDeploymentsResponse struct {
 	Deployments []Deployment `json:"deployments"`
 }
 
+type listTeamsResponse struct {
+	Teams []apiTeam `json:"teams"`
+}
+
+type apiTeam struct {
+	ID   string `json:"id"`
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
+
+type listProjectsResponse struct {
+	Projects   []apiProject `json:"projects"`
+	Pagination pagination   `json:"pagination"`
+}
+
+type apiProject struct {
+	ID        string      `json:"id"`
+	Name      string      `json:"name"`
+	AccountID string      `json:"accountId"`
+	Framework string      `json:"framework"`
+	UpdatedAt int64       `json:"updatedAt"`
+	Link      ProjectLink `json:"link"`
+}
+
+type pagination struct {
+	Count int   `json:"count"`
+	Next  int64 `json:"next"`
+}
+
 type Deployment struct {
 	UID              string         `json:"uid"`
 	Name             string         `json:"name"`
@@ -28,7 +57,7 @@ type Deployment struct {
 	ChecksConclusion string         `json:"checksConclusion"`
 	Creator          Creator        `json:"creator"`
 	Meta             map[string]any `json:"meta"`
-	Project          LinkedProject  `json:"-"`
+	Project          Project        `json:"-"`
 }
 
 type Creator struct {
@@ -86,4 +115,40 @@ type ProjectSettings struct {
 type AliasError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+}
+
+type BuildLogLine struct {
+	CreatedAt  int64
+	Type       string
+	Step       string
+	Entrypoint string
+	Text       string
+	StatusCode string
+}
+
+type deploymentEvent struct {
+	Type       string       `json:"type"`
+	Created    flexibleInt  `json:"created"`
+	Date       flexibleInt  `json:"date"`
+	Text       string       `json:"text"`
+	StatusCode flexibleText `json:"statusCode"`
+	Info       eventInfo    `json:"info"`
+	Payload    eventPayload `json:"payload"`
+}
+
+type eventPayload struct {
+	Text       string       `json:"text"`
+	Date       flexibleInt  `json:"date"`
+	Created    flexibleInt  `json:"created"`
+	StatusCode flexibleText `json:"statusCode"`
+	Info       eventInfo    `json:"info"`
+}
+
+type eventInfo struct {
+	Type       string `json:"type"`
+	Name       string `json:"name"`
+	Entrypoint string `json:"entrypoint"`
+	Path       string `json:"path"`
+	Step       string `json:"step"`
+	ReadyState string `json:"readyState"`
 }

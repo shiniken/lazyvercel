@@ -36,3 +36,41 @@ func TestDiscoverProjectsRejectsUnlinkedDirectory(t *testing.T) {
 		t.Fatal("expected unlinked directory error")
 	}
 }
+
+func TestDiscoverProjectIfLinkedIgnoresUnlinkedDirectory(t *testing.T) {
+	_, ok, err := DiscoverProjectIfLinked(t.TempDir())
+	if err != nil {
+		t.Fatalf("DiscoverProjectIfLinked returned error: %v", err)
+	}
+	if ok {
+		t.Fatal("expected unlinked directory to return ok=false")
+	}
+}
+
+func TestMergeProjectsSelectsCWDLinkedProject(t *testing.T) {
+	catalog := []Project{
+		{ID: "prj_old", Name: "old", AccountID: "team_1", AccountSlug: "team", UpdatedAt: 20},
+		{ID: "prj_cwd", Name: "cwd", AccountID: "team_1", AccountSlug: "team", UpdatedAt: 10},
+	}
+	cwd := LinkedProject{ProjectID: "prj_cwd", OrgID: "team_1", ProjectName: "cwd", Dir: "/tmp/cwd"}
+
+	projects, initial := mergeProjects(catalog, nil, cwd, true)
+	if projects[initial].ID != "prj_cwd" {
+		t.Fatalf("expected cwd project selected, got %#v", projects[initial])
+	}
+	if !projects[initial].LinkedCWD {
+		t.Fatal("expected cwd project to be marked LinkedCWD")
+	}
+}
+
+func TestMergeProjectsFallsBackToMostRecentlyUpdated(t *testing.T) {
+	catalog := []Project{
+		{ID: "prj_old", Name: "old", AccountID: "team_1", AccountSlug: "team", UpdatedAt: 10},
+		{ID: "prj_new", Name: "new", AccountID: "team_1", AccountSlug: "team", UpdatedAt: 20},
+	}
+
+	projects, initial := mergeProjects(catalog, nil, LinkedProject{}, false)
+	if projects[initial].ID != "prj_new" {
+		t.Fatalf("expected newest project selected, got %#v", projects[initial])
+	}
+}
